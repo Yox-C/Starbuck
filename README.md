@@ -1,9 +1,44 @@
 Starbuck
-项目描述
-针对此项目，建立一个模型来对星巴克的推送成功率进行预测。
-      
 Installation
-Must runing with Python 3 with libraries of numpy, pandas, sqlalchemy, re, NLTK, pickle, Sklearn, plotly and flask libraries.
+      Anaconda distribution of Python version 3.6 or later
 
-Licensing, Authors, Acknowledgements
-Many thanks to Figure-8 for making this available to Udacity for training purposes. Special thanks to udacity for the training. Feel free to utilize the contents of this while citing me, udacity, and/or figure-8 accordingly.
+Project Motivation
+      To improve the understanding of the behaviours better,it is important to analyze the histrical beahaviour.Fit the model based on the history to predict the advertising success rate.
+
+Python Libraries used
+      pandas for data munipulation
+      numpy for numbers crunching
+      math for simple math operations
+      json for reading json files.
+      matplotlib.pyplot and seaborn for data visualization
+      sklearn for machine learning algorithms
+Dataset
+The dataset is in folder data, contained in three files:
+
+portfolio.json - containing offer ids and meta data about each offer (duration, type, etc.)
+profile.json - demographic data for each customer
+transcript.json - records for transactions, offers received, offers viewed, and offers completed Here is the schema and explanation of each variable in the files:
+portfolio.json
+
+id (string) - offer id
+offer_type (string) - type of offer ie BOGO, discount, informational
+difficulty (int) - minimum required spend to complete an offer
+reward (int) - reward given for completing an offer
+duration (int) -
+channels (list of strings)
+profile.json
+
+age (int) - age of the customer
+became_member_on (int) - date when customer created an app account
+gender (str) - gender of the customer (note some entries contain 'O' for other rather than M or F)
+id (str) - customer id
+income (float) - customer's income
+transcript.json
+
+event (str) - record description (ie transaction, offer received, offer viewed, etc.)
+person (str) - customer id
+time (int) - time in hours. The data begins at time t=0
+value - (dict of strings) - either an offer id or transaction amount depending on the record
+
+Results
+      Based on the analysis,we can draw a conclusion that we can use age,income,event,duration,gender,spending to predict the success ratio of advertising.
