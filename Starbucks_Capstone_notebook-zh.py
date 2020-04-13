@@ -75,7 +75,7 @@
 # 
 # 最后回到这个 notebook（还是点击橘黄色的 jupyter 图标），再次运行下面的单元格就不会报错了。
 
-# In[1]:
+# In[2]:
 
 
 import pandas as pd
@@ -97,165 +97,168 @@ profile = pd.read_json('data/profile.json', orient='records', lines=True)
 transcript = pd.read_json('data/transcript.json', orient='records', lines=True)
 
 
-# In[2]:
+# In[5]:
 
 
 profile.head()
 
 
-# In[3]:
+# In[6]:
 
 
 plt.hist(profile.age); profile.describe()
 
 
-# In[4]:
+# In[7]:
 
 
 g1= sns.FacetGrid(profile, col="gender")
 g1.map(plt.hist, "age")
 
 
-# In[5]:
+# In[8]:
 
 
 plt.hist(profile.income[profile.income.notna()]);
 
 
-# In[6]:
+# In[9]:
 
 
 g1= sns.FacetGrid(profile, col="gender")
 g1.map(plt.hist, "income")
 
 
-# In[7]:
+# In[10]:
 
 
 profile.apply(axis=0,func=lambda x: x.isna().sum())
 
 
-# In[8]:
+# In[11]:
 
 
 profile[profile.age != 118].isna().sum()
 
 
-# In[10]:
+# In[12]:
 
 
 missing_people = profile.loc[profile.age == 118,:].id
 
 
-# In[11]:
+# In[13]:
 
 
 portfolio.head()
 
 
-# In[12]:
+# In[14]:
 
 
 portfolio.offer_type.unique()
 
 
-# In[13]:
+# In[15]:
 
 
 portfolio.difficulty.unique()
 
 
-# In[14]:
+# In[16]:
 
 
 portfolio.apply(axis=0,func=lambda x: x.isna().sum())
 
 
-# In[15]:
+# In[17]:
 
 
 transcript.head()
 
 
-# In[16]:
+# In[18]:
 
 
 np.sum(pd.Series(transcript.person.unique()).isin(pd.Series((profile.id.unique()))))
 
 
-# In[17]:
+# In[19]:
 
 
 transcript.event.unique()
 
 
-# In[18]:
+# In[20]:
 
 
 transcript.groupby('event').count().loc[:,:'person']
 
 
-# In[19]:
+# In[21]:
+
+
+transcript.apply(axis=0,func=lambda x: x.isna().sum())
+
+
+# In[22]:
 
 
 def clean_trascript(transcript_df): 
     """ 
     #    Clean up the transcript data frame and return it. 
     #    INPUT:
-    #       transcript_df: all recoreded events on the user app
+    #       transcript_df
 
     #    
     #    OUTPUT:
-    #        offer_dataset: a processed dataset for all the events related to the offers
-    #        spending_dataset: a processed dataset for all the events related to the transactions
+    #        offer_dataset:events about the offers
+    #        spending_dataset: dataset for the events about the transactions
     """
 
     
     # Extracting the offers_id and amounts from the value columns of the data 
     transcript_clean = pd.DataFrame(transcript_df.value.tolist())
-    
-    # unify the name for offer id  
     transcript_clean.columns = transcript_clean.columns.str.replace("offer id","offer_id")
     s = transcript_clean.stack()
     transcript_clean = s.unstack()
     
-    #Hot encode the offer event and merge it back to the dataset 
+    #Dummy the offer event and merge it to the dataset 
     transcript_clean = pd.get_dummies(data=transcript_clean.join(transcript_df),columns=['event'])
     
-    # We can safely drop the value column now, we will also delete any duplicated records as a result of this process. 
+    # Drop the value column ,delete any duplicated records
     transcript_clean.drop('value', axis=1, inplace=True)
     transcript_clean.drop_duplicates(inplace=True)
     
-    # We will segregate the offers and transactions into  different datasets. 
+    # Segregate the offers and transactions into  different datasets. 
     offer_dataset = transcript_clean[transcript_clean.event_transaction != 1].copy()
     spending_dataset = transcript_clean[transcript_clean.event_transaction == 1].copy()
     
-    # We will drop the unecessary columns from the offer_dataset 
+    # Drop the unecessary columns from the offer_dataset 
     offer_dataset.drop(['amount','event_transaction','reward'], axis=1, inplace=True)
     
-    # We will select the columns related to the spending behavior into a seperate dataset. 
+    # Select the columns related to the spending behavior into a seperate dataset. 
     spending_dataset = spending_dataset.filter(['person', 'time', 'amount']).copy()
 
 
     return offer_dataset, spending_dataset.reset_index(drop=True)
 
 
-# In[20]:
+# In[23]:
 
 
 def clean_portfolio(portfolio_df): 
     
-    # Extract and hot encode the channel useed for each offer 
+    # Extract and dummy the channel useed for each offer 
     portfolio_clean = pd.concat([ portfolio_df,pd.get_dummies(portfolio_df.channels.apply(pd.Series).stack()).sum(level=0)], axis=1, sort=False)
     
-    # we can savely drop channels and reward columns now 
+    # Drop channels and reward columns now 
     portfolio_clean.drop(['channels', 'reward'], axis=1, inplace=True)
     
     return portfolio_clean
 
 
-# In[21]:
-
+# In[24]:
 
 
 def clean_profile(profile_df): 
@@ -265,11 +268,11 @@ def clean_profile(profile_df):
     it also parse the date for membership into three columns , year, month , day 
     
     INPUT:
-       profile_df: Data frame of containing the information related to users.
+       profile_df: Information related to users.
 
     #    
     OUTPUT:
-        profile_df: a cleaned up Data Frame for all users on the app. 
+        profile_df: Cleaned information. 
     """
     # Deleting missing data [justification of decision is below]   
     profile_df = profile_df.loc[profile_df.age != 118]
@@ -281,7 +284,7 @@ def clean_profile(profile_df):
     profile_df.loc[:,'member_day'] = membership_column.str[6:8].tolist()
     
     
-     #Hot encode the gender and merge it back to the dataset 
+     #Dummy the gender and merge it back to the dataset 
     profile_df = pd.concat([profile_df, pd.get_dummies(profile_df.gender)],axis=1, sort=False)
     
     
@@ -292,19 +295,19 @@ def clean_profile(profile_df):
     return profile_df
 
 
-# In[22]:
+# In[25]:
 
 
 offer_dataset,_ = clean_trascript(transcript)
 
 
-# In[23]:
+# In[26]:
 
 
 offer_dataset.head()
 
 
-# In[30]:
+# In[27]:
 
 
 def gen_analytic_df(cln_profile, cln_offer, cln_portfolio):
@@ -336,32 +339,49 @@ def gen_analytic_df(cln_profile, cln_offer, cln_portfolio):
     return final_df
 
 
-# In[31]:
+# In[28]:
 
 
 profile.head()
 
 
-# In[32]:
+# In[29]:
 
 
 clean_portfolio(portfolio)
 
 
-# In[33]:
+# In[38]:
+
+
+clean_profile(profile)
+
+
+# In[36]:
 
 
 offer_dataset,_ = clean_trascript(transcript)
+
+
+# In[39]:
+
+
 final_df = gen_analytic_df(clean_profile(profile), offer_dataset, clean_portfolio(portfolio))
 
 
-# In[34]:
+# In[40]:
 
 
 final_df.head()
 
 
-# In[35]:
+# In[41]:
+
+
+final_df.columns.values.tolist()
+
+
+# In[42]:
 
 
 def analyze_offer_success(df):
@@ -407,7 +427,7 @@ def analyze_offer_success(df):
     return final_df
 
 
-# In[36]:
+# In[43]:
 
 
 analytic_df = analyze_offer_success(final_df)
@@ -502,40 +522,68 @@ plt.subplots_adjust( hspace=.5)
 plt.show()
 
 
-# In[43]:
+# In[63]:
 
 
-# Instantiate a BaggingClassifier with:
-# 200 weak learners (n_estimators) and everything else as default values
+model_bagging = BaggingClassifier(n_estimators = 250)
 
-model_bagging = BaggingClassifier(n_estimators = 200)
-
-# Instantiate a RandomForestClassifier with:
-# 200 weak learners (n_estimators) and everything else as default values
-
-model_randomForest = RandomForestClassifier(n_estimators = 200)
-
-# Instantiate an a AdaBoostClassifier with:
-# With 300 weak learners (n_estimators) and a learning_rate of 0.2
+model_randomForest = RandomForestClassifier(n_estimators = 250)
 
 model_ada = AdaBoostClassifier(n_estimators = 300, learning_rate=0.2)
 
 
-# In[44]:
+# In[48]:
 
 
-## Few pre-Processing before spliting the data. 
 df = pd.concat([analytic_df,pd.get_dummies(analytic_df.offer_type)],axis = 1 ,sort=False)
 df.reset_index(drop= True, inplace = True)
 
 
-# In[45]:
+# In[49]:
 
 
 df.head()
 
 
-# In[46]:
+# In[64]:
+
+
+x_features = ['difficulty','duration','email','mobile','social','F', 'M','O', 'bogo', 'discount', 'informational']
+
+
+# In[65]:
+
+
+X_train, X_test, y_train, y_test = train_test_split(df[x_features], 
+                                                    df['success'], 
+                                                    random_state=1)
+
+
+# In[66]:
+
+
+model_bagging.fit(X_train,y_train)
+model_randomForest.fit(X_train,y_train)
+model_ada.fit(X_train,y_train)
+
+
+# In[67]:
+
+
+bag_pred = model_bagging.predict(X_test)
+rand_pred = model_randomForest.predict(X_test)
+ada_pred = model_ada.predict(X_test)
+
+
+# In[68]:
+
+
+print_metrics(y_test, bag_pred, model_name="bagging")
+print_metrics(y_test, rand_pred, model_name="randomForest")
+print_metrics(y_test, ada_pred, model_name="ada")
+
+
+# In[59]:
 
 
 _,spending = clean_trascript(transcript)
@@ -551,13 +599,13 @@ refined_df = df.join(spending_avg, on='person')
 refined_df.fillna(0, inplace=True)
 
 
-# In[47]:
+# In[69]:
 
 
 refined_x_features = ['difficulty','duration','email','mobile','social','F', 'M','O', 'bogo', 'discount', 'informational','amount']
 
 
-# In[48]:
+# In[70]:
 
 
 # Split our dataset into training and testing data
@@ -566,7 +614,7 @@ X_train, X_test, y_train, y_test = train_test_split(refined_df[refined_x_feature
                                                     random_state=1)
 
 
-# In[49]:
+# In[54]:
 
 
 def print_metrics(y_true, preds, model_name=None):
@@ -594,7 +642,7 @@ def print_metrics(y_true, preds, model_name=None):
         print('\n\n')
 
 
-# In[50]:
+# In[71]:
 
 
 # Fit your BaggingClassifier to the training data
@@ -607,7 +655,7 @@ model_randomForest.fit(X_train,y_train)
 model_ada.fit(X_train,y_train)
 
 
-# In[51]:
+# In[72]:
 
 
 # Predict using BaggingClassifier on the test data
@@ -619,7 +667,7 @@ rand_pred = model_randomForest.predict(X_test)
 ada_pred = model_ada.predict(X_test)
 
 
-# In[52]:
+# In[73]:
 
 
 # Print Bagging scores
