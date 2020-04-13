@@ -1,18 +1,24 @@
 Starbuck
+
 Installation
+      
       Anaconda distribution of Python version 3.6 or later
 
 Project Motivation
+      
       To improve the understanding of the behaviours better,it is important to analyze the histrical beahaviour.Fit the model based on the history to predict the advertising success rate.
 
 Python Libraries used
+      
       pandas for data munipulation
       numpy for numbers crunching
       math for simple math operations
       json for reading json files.
       matplotlib.pyplot and seaborn for data visualization
       sklearn for machine learning algorithms
+      
 Dataset
+
 The dataset is in folder data, contained in three files:
 
 portfolio.json - containing offer ids and meta data about each offer (duration, type, etc.)
@@ -41,4 +47,5 @@ time (int) - time in hours. The data begins at time t=0
 value - (dict of strings) - either an offer id or transaction amount depending on the record
 
 Results
+
       Based on the analysis,we can draw a conclusion that we can use age,income,event,duration,gender,spending to predict the success ratio of advertising.
