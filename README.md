@@ -46,6 +46,11 @@ person (str) - customer id
 time (int) - time in hours. The data begins at time t=0
 value - (dict of strings) - either an offer id or transaction amount depending on the record
 
-Results
+结果讨论
+三种方法分别是bagging,randomForest,adaboost方法。从评估结果的信息来看，adaboost方法的准确性更高，该集成方法是将使用的给定的学习算法构建的基本分类器的预测结合起来，以此来提高分类器的通用性\鲁棒性。在该种情况下我们可以使用gridsearchcv方法来对参数进行进一步的筛选。
 
-      Based on the analysis,we can draw a conclusion that we can use age,income,event,duration,gender,spending to predict the success ratio of advertising.
+使用网格搜索得出了最优参数{'learning_rate': 0.2, 'n_estimators': 300}。
+
+限于时间和机器性能，没有进行更多尝试，后续可以尝试更多不同算法，以比对时间花销和精度。
+
+后续可以继续研究顾客使用优惠券的时间与用户本身信息的关系，可以得出更加有效的优惠券有效期。
