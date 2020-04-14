@@ -75,7 +75,7 @@
 # 
 # 最后回到这个 notebook（还是点击橘黄色的 jupyter 图标），再次运行下面的单元格就不会报错了。
 
-# In[2]:
+# In[23]:
 
 
 import pandas as pd
@@ -87,7 +87,8 @@ import seaborn as sns
 from sklearn.ensemble import BaggingClassifier,RandomForestClassifier,AdaBoostClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 
@@ -95,6 +96,12 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 portfolio = pd.read_json('data/portfolio.json', orient='records', lines=True)
 profile = pd.read_json('data/profile.json', orient='records', lines=True)
 transcript = pd.read_json('data/transcript.json', orient='records', lines=True)
+
+
+# In[ ]:
+
+
+
 
 
 # In[5]:
@@ -201,7 +208,7 @@ transcript.groupby('event').count().loc[:,:'person']
 transcript.apply(axis=0,func=lambda x: x.isna().sum())
 
 
-# In[22]:
+# In[2]:
 
 
 def clean_trascript(transcript_df): 
@@ -232,6 +239,7 @@ def clean_trascript(transcript_df):
     
     # Segregate the offers and transactions into  different datasets. 
     offer_dataset = transcript_clean[transcript_clean.event_transaction != 1].copy()
+    
     spending_dataset = transcript_clean[transcript_clean.event_transaction == 1].copy()
     
     # Drop the unecessary columns from the offer_dataset 
@@ -244,7 +252,7 @@ def clean_trascript(transcript_df):
     return offer_dataset, spending_dataset.reset_index(drop=True)
 
 
-# In[23]:
+# In[3]:
 
 
 def clean_portfolio(portfolio_df): 
@@ -258,7 +266,7 @@ def clean_portfolio(portfolio_df):
     return portfolio_clean
 
 
-# In[24]:
+# In[4]:
 
 
 def clean_profile(profile_df): 
@@ -295,7 +303,7 @@ def clean_profile(profile_df):
     return profile_df
 
 
-# In[25]:
+# In[5]:
 
 
 offer_dataset,_ = clean_trascript(transcript)
@@ -307,7 +315,7 @@ offer_dataset,_ = clean_trascript(transcript)
 offer_dataset.head()
 
 
-# In[27]:
+# In[6]:
 
 
 def gen_analytic_df(cln_profile, cln_offer, cln_portfolio):
@@ -345,25 +353,25 @@ def gen_analytic_df(cln_profile, cln_offer, cln_portfolio):
 profile.head()
 
 
-# In[29]:
+# In[7]:
 
 
 clean_portfolio(portfolio)
 
 
-# In[38]:
+# In[8]:
 
 
 clean_profile(profile)
 
 
-# In[36]:
+# In[9]:
 
 
 offer_dataset,_ = clean_trascript(transcript)
 
 
-# In[39]:
+# In[10]:
 
 
 final_df = gen_analytic_df(clean_profile(profile), offer_dataset, clean_portfolio(portfolio))
@@ -381,7 +389,7 @@ final_df.head()
 final_df.columns.values.tolist()
 
 
-# In[42]:
+# In[11]:
 
 
 def analyze_offer_success(df):
@@ -427,7 +435,7 @@ def analyze_offer_success(df):
     return final_df
 
 
-# In[43]:
+# In[12]:
 
 
 analytic_df = analyze_offer_success(final_df)
@@ -522,7 +530,7 @@ plt.subplots_adjust( hspace=.5)
 plt.show()
 
 
-# In[63]:
+# In[13]:
 
 
 model_bagging = BaggingClassifier(n_estimators = 250)
@@ -532,7 +540,7 @@ model_randomForest = RandomForestClassifier(n_estimators = 250)
 model_ada = AdaBoostClassifier(n_estimators = 300, learning_rate=0.2)
 
 
-# In[48]:
+# In[14]:
 
 
 df = pd.concat([analytic_df,pd.get_dummies(analytic_df.offer_type)],axis = 1 ,sort=False)
@@ -583,7 +591,7 @@ print_metrics(y_test, rand_pred, model_name="randomForest")
 print_metrics(y_test, ada_pred, model_name="ada")
 
 
-# In[59]:
+# In[15]:
 
 
 _,spending = clean_trascript(transcript)
@@ -599,13 +607,13 @@ refined_df = df.join(spending_avg, on='person')
 refined_df.fillna(0, inplace=True)
 
 
-# In[69]:
+# In[16]:
 
 
 refined_x_features = ['difficulty','duration','email','mobile','social','F', 'M','O', 'bogo', 'discount', 'informational','amount']
 
 
-# In[70]:
+# In[17]:
 
 
 # Split our dataset into training and testing data
@@ -614,7 +622,7 @@ X_train, X_test, y_train, y_test = train_test_split(refined_df[refined_x_feature
                                                     random_state=1)
 
 
-# In[54]:
+# In[18]:
 
 
 def print_metrics(y_true, preds, model_name=None):
@@ -642,7 +650,7 @@ def print_metrics(y_true, preds, model_name=None):
         print('\n\n')
 
 
-# In[71]:
+# In[19]:
 
 
 # Fit your BaggingClassifier to the training data
@@ -655,7 +663,7 @@ model_randomForest.fit(X_train,y_train)
 model_ada.fit(X_train,y_train)
 
 
-# In[72]:
+# In[20]:
 
 
 # Predict using BaggingClassifier on the test data
@@ -667,7 +675,7 @@ rand_pred = model_randomForest.predict(X_test)
 ada_pred = model_ada.predict(X_test)
 
 
-# In[73]:
+# In[21]:
 
 
 # Print Bagging scores
@@ -678,6 +686,54 @@ print_metrics(y_test, rand_pred, model_name="randomForest")
 
 # Print AdaBoost scores
 print_metrics(y_test, ada_pred, model_name="ada")
+
+
+# In[32]:
+
+
+#model_ada = AdaBoostClassifier(n_estimators = 300, learning_rate=0.2)
+model_adagd = AdaBoostClassifier()
+
+
+# In[37]:
+
+
+n_estimators = [250,300,350,400,450]
+learning_rate = [0.05,0.1,0.2,0.3]
+param_grid = dict(n_estimators = n_estimators,learning_rate = learning_rate)
+grid_search = GridSearchCV(model_adagd,param_grid)
+grid_result = grid_search.fit(X_train, y_train)
+
+
+# In[38]:
+
+
+print(grid_search.best_params_)
+
+
+# In[39]:
+
+
+ada_pred = grid_search.predict(X_test)
+print_metrics(y_test, ada_pred, model_name="ada_grid")
+
+
+# In[42]:
+
+
+n_estimators = [298,300,302]
+learning_rate = [0.15,0.2,0.25]
+param_grid = dict(n_estimators = n_estimators,learning_rate = learning_rate)
+grid_search = GridSearchCV(model_adagd,param_grid)
+grid_result = grid_search.fit(X_train, y_train)
+print(grid_search.best_params_)
+
+
+# In[44]:
+
+
+ada_pred = grid_result.predict(X_test)
+print_metrics(y_test, ada_pred, model_name="ada_grid")
 
 
 # In[53]:
